@@ -1,9 +1,16 @@
 'use strict';
 
 const color = require('kleur');
-const { cursor } = require('sisteransi');
+
+const _require = require('sisteransi'),
+      cursor = _require.cursor;
+
 const MultiselectPrompt = require('./multiselect');
-const { clear, style, figures } = require('../util');
+
+const _require2 = require('../util'),
+      clear = _require2.clear,
+      style = _require2.style,
+      figures = _require2.figures;
 /**
  * MultiselectPrompt Base Element
  * @param {Object} opts Options
@@ -16,8 +23,10 @@ const { clear, style, figures } = require('../util');
  * @param {Stream} [opts.stdin] The Readable stream to listen to
  * @param {Stream} [opts.stdout] The Writable stream to write readline data to
  */
+
+
 class AutocompleteMultiselectPrompt extends MultiselectPrompt {
-  constructor(opts={}) {
+  constructor(opts = {}) {
     opts.overrideRender = true;
     super(opts);
     this.inputValue = '';
@@ -31,6 +40,7 @@ class AutocompleteMultiselectPrompt extends MultiselectPrompt {
     this.cursor = this.filteredOptions.length - 1;
     this.render();
   }
+
   next() {
     this.cursor = (this.cursor + 1) % this.filteredOptions.length;
     this.render();
@@ -42,6 +52,7 @@ class AutocompleteMultiselectPrompt extends MultiselectPrompt {
     } else {
       this.cursor--;
     }
+
     this.render();
   }
 
@@ -51,6 +62,7 @@ class AutocompleteMultiselectPrompt extends MultiselectPrompt {
     } else {
       this.cursor++;
     }
+
     this.render();
   }
 
@@ -74,24 +86,26 @@ class AutocompleteMultiselectPrompt extends MultiselectPrompt {
 
   updateFilteredOptions() {
     const currentHighlight = this.filteredOptions[this.cursor];
-    this.filteredOptions = this.value
-      .filter(v => {
-        if (this.inputValue) {
-          if (typeof v.title === 'string') {
-            if (v.title.toLowerCase().includes(this.inputValue.toLowerCase())) {
-              return true;
-            }
+    this.filteredOptions = this.value.filter(v => {
+      if (this.inputValue) {
+        if (typeof v.title === 'string') {
+          if (v.title.toLowerCase().includes(this.inputValue.toLowerCase())) {
+            return true;
           }
-          if (typeof v.value === 'string') {
-            if (v.value.toLowerCase().includes(this.inputValue.toLowerCase())) {
-              return true;
-            }
-          }
-          return false;
         }
-        return true;
-      });
-    const newHighlightIndex = this.filteredOptions.findIndex(v => v === currentHighlight)
+
+        if (typeof v.value === 'string') {
+          if (v.value.toLowerCase().includes(this.inputValue.toLowerCase())) {
+            return true;
+          }
+        }
+
+        return false;
+      }
+
+      return true;
+    });
+    const newHighlightIndex = this.filteredOptions.findIndex(v => v === currentHighlight);
     this.cursor = newHighlightIndex < 0 ? 0 : newHighlightIndex;
     this.render();
   }
@@ -128,6 +142,7 @@ class AutocompleteMultiselectPrompt extends MultiselectPrompt {
       if (typeof this.instructions === 'string') {
         return this.instructions;
       }
+
       return `
 Instructions:
     ${figures.arrowUp}/${figures.arrowDown}: Highlight option
@@ -136,6 +151,7 @@ Instructions:
     enter/return: Complete answer
 `;
     }
+
     return '';
   }
 
@@ -146,17 +162,13 @@ Filtered results for: ${this.inputValue ? this.inputValue : color.gray('Enter so
 
   renderOption(cursor, v, i) {
     let title;
-    if (v.disabled) title = cursor === i ? color.gray().underline(v.title) : color.strikethrough().gray(v.title);
-    else title = cursor === i ? color.cyan().underline(v.title) : v.title;
-    return (v.selected ? color.green(figures.radioOn) : figures.radioOff) + '  ' + title
+    if (v.disabled) title = cursor === i ? color.gray().underline(v.title) : color.strikethrough().gray(v.title);else title = cursor === i ? color.cyan().underline(v.title) : v.title;
+    return (v.selected ? color.green(figures.radioOn) : figures.radioOff) + '  ' + title;
   }
 
   renderDoneOrInstructions() {
     if (this.done) {
-      return this.value
-        .filter(e => e.selected)
-        .map(v => v.title)
-        .join(', ');
+      return this.value.filter(e => e.selected).map(v => v.title).join(', ');
     }
 
     const output = [color.gray(this.hint), this.renderInstructions(), this.renderCurrentInput()];
@@ -164,32 +176,27 @@ Filtered results for: ${this.inputValue ? this.inputValue : color.gray('Enter so
     if (this.filteredOptions.length && this.filteredOptions[this.cursor].disabled) {
       output.push(color.yellow(this.warn));
     }
+
     return output.join(' ');
   }
 
   render() {
     if (this.closed) return;
     if (this.firstRender) this.out.write(cursor.hide);
-    super.render();
+    super.render(); // print prompt
 
-    // print prompt
-
-    let prompt = [
-      style.symbol(this.done, this.aborted, this.incorrect),
-      color.bold(this.msg),
-      style.delimiter(false),
-      this.renderDoneOrInstructions()
-    ].join(' ');
+    let prompt = [style.symbol(this.done, this.aborted, this.incorrect), color.bold(this.msg), style.delimiter(false), this.renderDoneOrInstructions()].join(' ');
 
     if (this.showMinError) {
       prompt += color.red(`You must select a minimum of ${this.minSelected} choices.`);
       this.showMinError = false;
     }
-    prompt += this.renderOptions(this.filteredOptions);
 
+    prompt += this.renderOptions(this.filteredOptions);
     this.out.write(this.clear + prompt);
     this.clear = clear(prompt);
   }
+
 }
 
 module.exports = AutocompleteMultiselectPrompt;

@@ -1,15 +1,31 @@
+"use strict";
+
+function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { Promise.resolve(value).then(_next, _throw); } }
+
+function _asyncToGenerator(fn) { return function () { var self = this, args = arguments; return new Promise(function (resolve, reject) { var gen = fn.apply(self, args); function _next(value) { asyncGeneratorStep(gen, resolve, reject, _next, _throw, "next", value); } function _throw(err) { asyncGeneratorStep(gen, resolve, reject, _next, _throw, "throw", err); } _next(undefined); }); }; }
+
 const color = require('kleur');
+
 const Prompt = require('./prompt');
-const { cursor, erase } = require('sisteransi');
-const { style, figures, clear, lines } = require('../util');
+
+const _require = require('sisteransi'),
+      cursor = _require.cursor,
+      erase = _require.erase;
+
+const _require2 = require('../util'),
+      style = _require2.style,
+      figures = _require2.figures,
+      clear = _require2.clear,
+      lines = _require2.lines;
 
 const isNumber = /[0-9]/;
+
 const isDef = any => any !== undefined;
+
 const round = (number, precision) => {
   let factor = Math.pow(10, precision);
   return Math.round(number * factor) / factor;
-}
-
+};
 /**
  * NumberPrompt Base Element
  * @param {Object} opts Options
@@ -26,8 +42,10 @@ const round = (number, precision) => {
  * @param {Stream} [opts.stdout] The Writable stream to write readline data to
  * @param {String} [opts.error] The invalid error label
  */
+
+
 class NumberPrompt extends Prompt {
-  constructor(opts={}) {
+  constructor(opts = {}) {
     super(opts);
     this.transform = style.render(opts.style);
     this.msg = opts.message;
@@ -38,7 +56,9 @@ class NumberPrompt extends Prompt {
     this.min = isDef(opts.min) ? opts.min : -Infinity;
     this.max = isDef(opts.max) ? opts.max : Infinity;
     this.errorMsg = opts.error || `Please Enter A Valid Value`;
+
     this.validator = opts.validate || (() => true);
+
     this.color = `cyan`;
     this.value = ``;
     this.typed = ``;
@@ -57,6 +77,7 @@ class NumberPrompt extends Prompt {
       this.rendered = this.transform.render(`${round(v, this.round)}`);
       this._value = round(v, this.round);
     }
+
     this.fire();
   }
 
@@ -69,7 +90,7 @@ class NumberPrompt extends Prompt {
   }
 
   valid(c) {
-    return c === `-` || c === `.` && this.float || isNumber.test(c)
+    return c === `-` || c === `.` && this.float || isNumber.test(c);
   }
 
   reset() {
@@ -90,39 +111,60 @@ class NumberPrompt extends Prompt {
     this.close();
   }
 
-  async validate() {
-    let valid = await this.validator(this.value);
-    if (typeof valid === `string`) {
-      this.errorMsg = valid;
-      valid = false;
-    }
-    this.error = !valid;
+  validate() {
+    var _this = this;
+
+    return _asyncToGenerator(function* () {
+      let valid = yield _this.validator(_this.value);
+
+      if (typeof valid === `string`) {
+        _this.errorMsg = valid;
+        valid = false;
+      }
+
+      _this.error = !valid;
+    })();
   }
 
-  async submit() {
-    await this.validate();
-    if (this.error) {
-      this.color = `red`;
-      this.fire();
-      this.render();
-      return;
-    }
-    let x = this.value;
-    this.value = x !== `` ? x : this.initial;
-    this.done = true;
-    this.aborted = false;
-    this.error = false;
-    this.fire();
-    this.render();
-    this.out.write(`\n`);
-    this.close();
+  submit() {
+    var _this2 = this;
+
+    return _asyncToGenerator(function* () {
+      yield _this2.validate();
+
+      if (_this2.error) {
+        _this2.color = `red`;
+
+        _this2.fire();
+
+        _this2.render();
+
+        return;
+      }
+
+      let x = _this2.value;
+      _this2.value = x !== `` ? x : _this2.initial;
+      _this2.done = true;
+      _this2.aborted = false;
+      _this2.error = false;
+
+      _this2.fire();
+
+      _this2.render();
+
+      _this2.out.write(`\n`);
+
+      _this2.close();
+    })();
   }
 
   up() {
     this.typed = ``;
-    if(this.value === '') {
+
+    if (this.value === '') {
       this.value = this.min - this.inc;
     }
+
     if (this.value >= this.max) return this.bell();
     this.value += this.inc;
     this.color = `cyan`;
@@ -132,9 +174,11 @@ class NumberPrompt extends Prompt {
 
   down() {
     this.typed = ``;
-    if(this.value === '') {
+
+    if (this.value === '') {
       this.value = this.min + this.inc;
     }
+
     if (this.value <= this.min) return this.bell();
     this.value -= this.inc;
     this.color = `cyan`;
@@ -145,10 +189,12 @@ class NumberPrompt extends Prompt {
   delete() {
     let val = this.value.toString();
     if (val.length === 0) return this.bell();
-    this.value = this.parse((val = val.slice(0, -1))) || ``;
+    this.value = this.parse(val = val.slice(0, -1)) || ``;
+
     if (this.value !== '' && this.value < this.min) {
       this.value = this.min;
     }
+
     this.color = `cyan`;
     this.fire();
     this.render();
@@ -162,15 +208,13 @@ class NumberPrompt extends Prompt {
 
   _(c, key) {
     if (!this.valid(c)) return this.bell();
-
     const now = Date.now();
     if (now - this.lastHit > 1000) this.typed = ``; // 1s elapsed
+
     this.typed += c;
     this.lastHit = now;
     this.color = `cyan`;
-
     if (c === `.`) return this.fire();
-
     this.value = Math.min(this.parse(this.typed), this.max);
     if (this.value > this.max) this.value = this.max;
     if (this.value < this.min) this.value = this.min;
@@ -180,31 +224,24 @@ class NumberPrompt extends Prompt {
 
   render() {
     if (this.closed) return;
+
     if (!this.firstRender) {
-      if (this.outputError)
-        this.out.write(cursor.down(lines(this.outputError) - 1) + clear(this.outputError));
+      if (this.outputError) this.out.write(cursor.down(lines(this.outputError) - 1) + clear(this.outputError));
       this.out.write(clear(this.outputText));
     }
+
     super.render();
-    this.outputError = '';
+    this.outputError = ''; // Print prompt
 
-    // Print prompt
-    this.outputText = [
-      style.symbol(this.done, this.aborted, this.incorrect),
-      color.bold(this.msg),
-      style.delimiter(this.done),
-      !this.done || (!this.done && !this.placeholder)
-          ? color[this.color]().underline(this.rendered) : this.rendered
-    ].join(` `);
+    this.outputText = [style.symbol(this.done, this.aborted, this.incorrect), color.bold(this.msg), style.delimiter(this.done), !this.done || !this.done && !this.placeholder ? color[this.color]().underline(this.rendered) : this.rendered].join(` `); // Print error
 
-    // Print error
     if (this.error) {
-      this.outputError += this.errorMsg.split(`\n`)
-          .reduce((a, l, i) => a + `\n${i ? ` ` : figures.pointerSmall} ${color.red().italic(l)}`, ``);
+      this.outputError += this.errorMsg.split(`\n`).reduce((a, l, i) => a + `\n${i ? ` ` : figures.pointerSmall} ${color.red().italic(l)}`, ``);
     }
 
     this.out.write(erase.line + cursor.to(0) + this.outputText + cursor.save + this.outputError + cursor.restore);
   }
+
 }
 
 module.exports = NumberPrompt;

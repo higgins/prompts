@@ -1,8 +1,16 @@
-const color = require('kleur');
-const Prompt = require('./prompt');
-const { style, clear } = require('../util');
-const { erase, cursor } = require('sisteransi');
+"use strict";
 
+const color = require('kleur');
+
+const Prompt = require('./prompt');
+
+const _require = require('../util'),
+      style = _require.style,
+      clear = _require.clear;
+
+const _require2 = require('sisteransi'),
+      erase = _require2.erase,
+      cursor = _require2.cursor;
 /**
  * ConfirmPrompt Base Element
  * @param {Object} opts Options
@@ -15,8 +23,10 @@ const { erase, cursor } = require('sisteransi');
  * @param {String} [opts.no] The "No" label
  * @param {String} [opts.noOption] The "No" option when choosing between yes/no
  */
+
+
 class ConfirmPrompt extends Prompt {
-  constructor(opts={}) {
+  constructor(opts = {}) {
     super(opts);
     this.msg = opts.message;
     this.value = opts.initial;
@@ -58,29 +68,23 @@ class ConfirmPrompt extends Prompt {
       this.value = true;
       return this.submit();
     }
+
     if (c.toLowerCase() === 'n') {
       this.value = false;
       return this.submit();
     }
+
     return this.bell();
   }
 
   render() {
     if (this.closed) return;
-    if (this.firstRender) this.out.write(cursor.hide);
-    else this.out.write(clear(this.outputText));
+    if (this.firstRender) this.out.write(cursor.hide);else this.out.write(clear(this.outputText));
     super.render();
-
-    this.outputText = [
-      style.symbol(this.done, this.aborted, this.incorrect),
-      color.bold(this.msg),
-      style.delimiter(this.done),
-      this.done ? (this.value ? this.yesMsg : this.noMsg)
-          : color.gray(this.initialValue ? this.yesOption : this.noOption)
-    ].join(' ');
-
+    this.outputText = [style.symbol(this.done, this.aborted, this.incorrect), color.bold(this.msg), style.delimiter(this.done), this.done ? this.value ? this.yesMsg : this.noMsg : color.gray(this.initialValue ? this.yesOption : this.noOption)].join(' ');
     this.out.write(erase.line + cursor.to(0) + this.outputText);
   }
+
 }
 
 module.exports = ConfirmPrompt;

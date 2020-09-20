@@ -1,3 +1,7 @@
+## NOTE: Changes in this fork
+- This was forked to support changing the icon at the start of each newline
+- Setting `this.incorrect` on a prompt will render the cross mark (❌)
+
 <p align="center">
   <img src="https://github.com/terkelg/prompts/raw/master/prompts.png" alt="Prompts" width="500" />
 </p>
@@ -716,7 +720,7 @@ Use <kbd>up</kbd>/<kbd>down</kbd> to navigate. Use <kbd>tab</kbd> to cycle the l
 
 ### multiselect(message, choices, [initial], [max], [hint], [warn])
 ### autocompleteMultiselect(same)
-> Interactive multi-select prompt.  
+> Interactive multi-select prompt.
 > Autocomplete is a searchable multiselect prompt with the same options. Useful for long lists.
 
 Use <kbd>space</kbd> to toggle select/unselect and <kbd>up</kbd>/<kbd>down</kbd> to navigate. Use <kbd>tab</kbd> to cycle the list. You can also use <kbd>right</kbd> to select and <kbd>left</kbd> to deselect.

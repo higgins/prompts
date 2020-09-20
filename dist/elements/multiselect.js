@@ -1,10 +1,18 @@
 'use strict';
 
 const color = require('kleur');
-const { cursor } = require('sisteransi');
-const Prompt = require('./prompt');
-const { clear, figures, style, wrap, entriesToDisplay } = require('../util');
 
+const _require = require('sisteransi'),
+      cursor = _require.cursor;
+
+const Prompt = require('./prompt');
+
+const _require2 = require('../util'),
+      clear = _require2.clear,
+      figures = _require2.figures,
+      style = _require2.style,
+      wrap = _require2.wrap,
+      entriesToDisplay = _require2.entriesToDisplay;
 /**
  * MultiselectPrompt Base Element
  * @param {Object} opts Options
@@ -18,8 +26,10 @@ const { clear, figures, style, wrap, entriesToDisplay } = require('../util');
  * @param {Stream} [opts.stdin] The Readable stream to listen to
  * @param {Stream} [opts.stdout] The Writable stream to write readline data to
  */
+
+
 class MultiselectPrompt extends Prompt {
-  constructor(opts={}) {
+  constructor(opts = {}) {
     super(opts);
     this.msg = opts.message;
     this.cursor = opts.cursor || 0;
@@ -32,8 +42,10 @@ class MultiselectPrompt extends Prompt {
     this.instructions = opts.instructions;
     this.optionsPerPage = opts.optionsPerPage || 10;
     this.value = opts.choices.map((ch, idx) => {
-      if (typeof ch === 'string')
-        ch = {title: ch, value: idx};
+      if (typeof ch === 'string') ch = {
+        title: ch,
+        value: idx
+      };
       return {
         title: ch && (ch.title || ch.value || ch),
         description: ch && ch.description,
@@ -44,6 +56,7 @@ class MultiselectPrompt extends Prompt {
     });
     this.clear = clear('');
     this.incorrect = false;
+
     if (!opts.overrideRender) {
       this.render();
     }
@@ -69,8 +82,8 @@ class MultiselectPrompt extends Prompt {
   }
 
   submit() {
-    const selected = this.value
-      .filter(e => e.selected);
+    const selected = this.value.filter(e => e.selected);
+
     if (this.minSelected && selected.length < this.minSelected) {
       this.showMinError = true;
       this.render();
@@ -93,6 +106,7 @@ class MultiselectPrompt extends Prompt {
     this.cursor = this.value.length - 1;
     this.render();
   }
+
   next() {
     this.cursor = (this.cursor + 1) % this.value.length;
     this.render();
@@ -104,6 +118,7 @@ class MultiselectPrompt extends Prompt {
     } else {
       this.cursor--;
     }
+
     this.render();
   }
 
@@ -113,6 +128,7 @@ class MultiselectPrompt extends Prompt {
     } else {
       this.cursor++;
     }
+
     this.render();
   }
 
@@ -166,12 +182,10 @@ class MultiselectPrompt extends Prompt {
       if (typeof this.instructions === 'string') {
         return this.instructions;
       }
-      return '\nInstructions:\n'
-        + `    ${figures.arrowUp}/${figures.arrowDown}: Highlight option\n`
-        + `    ${figures.arrowLeft}/${figures.arrowRight}/[space]: Toggle selection\n`
-        + (this.maxChoices === undefined ? `    a: Toggle all\n` : '')
-        + `    enter/return: Complete answer`;
+
+      return '\nInstructions:\n' + `    ${figures.arrowUp}/${figures.arrowDown}: Highlight option\n` + `    ${figures.arrowLeft}/${figures.arrowRight}/[space]: Toggle selection\n` + (this.maxChoices === undefined ? `    a: Toggle all\n` : '') + `    enter/return: Complete answer`;
     }
+
     return '';
   }
 
@@ -183,26 +197,34 @@ class MultiselectPrompt extends Prompt {
       title = cursor === i ? color.gray().underline(v.title) : color.strikethrough().gray(v.title);
     } else {
       title = cursor === i ? color.cyan().underline(v.title) : v.title;
+
       if (cursor === i && v.description) {
         desc = ` - ${v.description}`;
-        if (prefix.length + title.length + desc.length >= this.out.columns
-          || v.description.split(/\r?\n/).length > 1) {
-          desc = '\n' + wrap(v.description, { margin: prefix.length, width: this.out.columns });
+
+        if (prefix.length + title.length + desc.length >= this.out.columns || v.description.split(/\r?\n/).length > 1) {
+          desc = '\n' + wrap(v.description, {
+            margin: prefix.length,
+            width: this.out.columns
+          });
         }
       }
     }
 
     return prefix + title + color.gray(desc || '');
-  }
+  } // shared with autocompleteMultiselect
 
-  // shared with autocompleteMultiselect
+
   paginateOptions(options) {
     if (options.length === 0) {
       return color.red('No matches for this query.');
     }
 
-    let { startIndex, endIndex } = entriesToDisplay(this.cursor, options.length, this.optionsPerPage);
-    let prefix, styledOptions = [];
+    let _entriesToDisplay = entriesToDisplay(this.cursor, options.length, this.optionsPerPage),
+        startIndex = _entriesToDisplay.startIndex,
+        endIndex = _entriesToDisplay.endIndex;
+
+    let prefix,
+        styledOptions = [];
 
     for (let i = startIndex; i < endIndex; i++) {
       if (i === startIndex && startIndex > 0) {
@@ -212,26 +234,25 @@ class MultiselectPrompt extends Prompt {
       } else {
         prefix = ' ';
       }
+
       styledOptions.push(this.renderOption(this.cursor, options[i], i, prefix));
     }
 
     return '\n' + styledOptions.join('\n');
-  }
+  } // shared with autocomleteMultiselect
 
-  // shared with autocomleteMultiselect
+
   renderOptions(options) {
     if (!this.done) {
       return this.paginateOptions(options);
     }
+
     return '';
   }
 
   renderDoneOrInstructions() {
     if (this.done) {
-      return this.value
-        .filter(e => e.selected)
-        .map(v => v.title)
-        .join(', ');
+      return this.value.filter(e => e.selected).map(v => v.title).join(', ');
     }
 
     const output = [color.gray(this.hint), this.renderInstructions()];
@@ -239,30 +260,27 @@ class MultiselectPrompt extends Prompt {
     if (this.value[this.cursor].disabled) {
       output.push(color.yellow(this.warn));
     }
+
     return output.join(' ');
   }
 
   render() {
     if (this.closed) return;
     if (this.firstRender) this.out.write(cursor.hide);
-    super.render();
+    super.render(); // print prompt
 
-    // print prompt
-    let prompt = [
-      style.symbol(this.done, this.aborted, this.incorrect),
-      color.bold(this.msg),
-      style.delimiter(false),
-      this.renderDoneOrInstructions()
-    ].join(' ');
+    let prompt = [style.symbol(this.done, this.aborted, this.incorrect), color.bold(this.msg), style.delimiter(false), this.renderDoneOrInstructions()].join(' ');
+
     if (this.showMinError) {
       prompt += color.red(`You must select a minimum of ${this.minSelected} choices.`);
       this.showMinError = false;
     }
-    prompt += this.renderOptions(this.value);
 
+    prompt += this.renderOptions(this.value);
     this.out.write(this.clear + prompt);
     this.clear = clear(prompt);
   }
+
 }
 
 module.exports = MultiselectPrompt;

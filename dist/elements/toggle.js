@@ -1,8 +1,16 @@
-const color = require('kleur');
-const Prompt = require('./prompt');
-const { style, clear } = require('../util');
-const { cursor, erase } = require('sisteransi');
+"use strict";
 
+const color = require('kleur');
+
+const Prompt = require('./prompt');
+
+const _require = require('../util'),
+      style = _require.style,
+      clear = _require.clear;
+
+const _require2 = require('sisteransi'),
+      cursor = _require2.cursor,
+      erase = _require2.erase;
 /**
  * TogglePrompt Base Element
  * @param {Object} opts Options
@@ -13,8 +21,10 @@ const { cursor, erase } = require('sisteransi');
  * @param {Stream} [opts.stdin] The Readable stream to listen to
  * @param {Stream} [opts.stdout] The Writable stream to write readline data to
  */
+
+
 class TogglePrompt extends Prompt {
-  constructor(opts={}) {
+  constructor(opts = {}) {
     super(opts);
     this.msg = opts.message;
     this.value = !!opts.initial;
@@ -63,15 +73,19 @@ class TogglePrompt extends Prompt {
   delete() {
     this.deactivate();
   }
+
   left() {
     this.deactivate();
   }
+
   right() {
     this.activate();
   }
+
   down() {
     this.deactivate();
   }
+
   up() {
     this.activate();
   }
@@ -90,26 +104,18 @@ class TogglePrompt extends Prompt {
     } else if (c === '0') {
       this.value = false;
     } else return this.bell();
+
     this.render();
   }
 
   render() {
     if (this.closed) return;
-    if (this.firstRender) this.out.write(cursor.hide);
-    else this.out.write(clear(this.outputText));
+    if (this.firstRender) this.out.write(cursor.hide);else this.out.write(clear(this.outputText));
     super.render();
-
-    this.outputText = [
-      style.symbol(this.done, this.aborted, this.incorrect),
-      color.bold(this.msg),
-      style.delimiter(this.done),
-      this.value ? this.inactive : color.cyan().underline(this.inactive),
-      color.gray('/'),
-      this.value ? color.cyan().underline(this.active) : this.active
-    ].join(' ');
-
+    this.outputText = [style.symbol(this.done, this.aborted, this.incorrect), color.bold(this.msg), style.delimiter(this.done), this.value ? this.inactive : color.cyan().underline(this.inactive), color.gray('/'), this.value ? color.cyan().underline(this.active) : this.active].join(' ');
     this.out.write(erase.line + cursor.to(0) + this.outputText);
   }
+
 }
 
 module.exports = TogglePrompt;
